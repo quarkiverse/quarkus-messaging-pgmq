@@ -1,9 +1,13 @@
-name: Reactive Messaging Pgmq
-#description: Do something useful.
+name: Messaging PGMQ
+description: Connect to PostgreSQL PGMQ message queues using Reactive Messaging.
 metadata:
-#  keywords:
-#    - reactive-messaging-pgmq
-#  guide: https://docs.quarkiverse.io/quarkus-reactive-messaging-pgmq/dev/ # To create and publish this guide, see https://github.com/quarkiverse/quarkiverse/wiki#documenting-your-extension
-#  categories:
-#    - "miscellaneous"
-#  status: "preview"
+  keywords:
+    - reactive-messaging
+    - pgmq
+    - postgresql
+    - messaging
+    - queue
+  guide: https://docs.quarkiverse.io/quarkus-messaging-pgmq/dev/
+  categories:
+    - "messaging"
+  status: "preview"

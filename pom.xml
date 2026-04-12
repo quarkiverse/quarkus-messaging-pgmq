@@ -7,22 +7,23 @@
         <artifactId>quarkiverse-parent</artifactId>
         <version>20</version>
     </parent>
-    <groupId>io.quarkiverse.reactive.messaging.pgmq</groupId>
-    <artifactId>quarkus-reactive-messaging-pgmq-parent</artifactId>
+    <groupId>io.quarkiverse.messaging.pgmq</groupId>
+    <artifactId>quarkus-messaging-pgmq-parent</artifactId>
     <version>999-SNAPSHOT</version>
     <packaging>pom</packaging>
-    <name>Quarkus Reactive Messaging Pgmq - Parent</name>
+    <name>Quarkus Messaging Pgmq - Parent</name>
 
     <modules>
         <module>deployment</module>
         <module>runtime</module>
+        <module>client</module>
         <module>connector</module>
     </modules>
 
     <scm>
-        <connection>scm:git:git@github.com:quarkiverse/quarkus-reactive-messaging-pgmq.git</connection>
-        <developerConnection>scm:git:git@github.com:quarkiverse/quarkus-reactive-messaging-pgmq.git</developerConnection>
-        <url>https://github.com/quarkiverse/quarkus-reactive-messaging-pgmq</url>
+        <connection>scm:git:git@github.com:quarkiverse/quarkus-messaging-pgmq.git</connection>
+        <developerConnection>scm:git:git@github.com:quarkiverse/quarkus-messaging-pgmq.git</developerConnection>
+        <url>https://github.com/quarkiverse/quarkus-messaging-pgmq</url>
     </scm>
 
     <properties>

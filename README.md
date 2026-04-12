@@ -1,6 +1,6 @@
-# Quarkus Reactive Messaging Pgmq
+# Quarkus Messaging Pgmq
 
-[![Version](https://img.shields.io/maven-central/v/io.quarkiverse.reactive.messaging.pgmq/quarkus-reactive-messaging-pgmq?logo=apache-maven&style=flat-square)](https://central.sonatype.com/artifact/io.quarkiverse.reactive.messaging.pgmq/quarkus-reactive-messaging-pgmq-parent)
+[![Version](https://img.shields.io/maven-central/v/io.quarkiverse.messaging.pgmq/quarkus-messaging-pgmq?logo=apache-maven&style=flat-square)](https://central.sonatype.com/artifact/io.quarkiverse.messaging.pgmq/quarkus-messaging-pgmq-parent)
 
 ## Welcome to Quarkiverse!
 

@@ -4,12 +4,17 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>io.quarkiverse.reactive.messaging.pgmq</groupId>
-        <artifactId>quarkus-reactive-messaging-pgmq-parent</artifactId>
+        <groupId>io.quarkiverse.messaging.pgmq</groupId>
+        <artifactId>quarkus-messaging-pgmq-parent</artifactId>
         <version>999-SNAPSHOT</version>
     </parent>
-    <artifactId>quarkus-reactive-messaging-pgmq-connector</artifactId>
-    <name>Quarkus Reactive Messaging Pgmq - Connector</name>
+    <artifactId>quarkus-messaging-pgmq-connector</artifactId>
+    <name>Quarkus Messaging Pgmq - Connector</name>
+
+    <properties>
+        <weld.version>6.0.4.Final</weld.version>
+        <jackson.version>2.21.2</jackson.version>
+    </properties>
 
     <dependencies>
         <!-- SmallRye Reactive Messaging -->
@@ -21,22 +26,23 @@
             <groupId>io.smallrye.reactive</groupId>
             <artifactId>smallrye-reactive-messaging-otel</artifactId>
         </dependency>
+        <dependency>
+            <groupId>io.smallrye.reactive</groupId>
+            <artifactId>smallrye-connector-attribute-processor</artifactId>
+            <scope>provided</scope>
+        </dependency>
 
         <!-- Vert.x Reactive PG Client (Mutiny) -->
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-reactive-pg-client</artifactId>
-        </dependency>
         <dependency>
             <groupId>io.smallrye.reactive</groupId>
             <artifactId>smallrye-mutiny-vertx-pg-client</artifactId>
         </dependency>
 
-        <!-- OpenTelemetry tracing -->
+        <!-- PGMQ Client -->
         <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-opentelemetry</artifactId>
-            <optional>true</optional>
+            <groupId>io.quarkiverse.messaging.pgmq</groupId>
+            <artifactId>quarkus-messaging-pgmq-client</artifactId>
+            <version>${project.version}</version>
         </dependency>
 
         <!-- JBoss Logging -->
@@ -48,22 +54,14 @@
             <groupId>org.jboss.logging</groupId>
             <artifactId>jboss-logging-annotations</artifactId>
         </dependency>
-
         <dependency>
             <groupId>org.jboss.logging</groupId>
             <artifactId>jboss-logging-processor</artifactId>
-            <scope>provided</scope>
         </dependency>
 
         <dependency>
             <groupId>org.eclipse.microprofile.reactive-streams-operators</groupId>
             <artifactId>microprofile-reactive-streams-operators-api</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>io.smallrye.reactive</groupId>
-            <artifactId>smallrye-connector-attribute-processor</artifactId>
-            <scope>provided</scope>
         </dependency>
 
         <!-- Test dependencies -->
@@ -76,14 +74,31 @@
         </dependency>
 
         <dependency>
+            <groupId>org.eclipse.microprofile.config</groupId>
+            <artifactId>microprofile-config-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.smallrye.config</groupId>
+            <artifactId>smallrye-config</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
             <groupId>org.jboss.weld.se</groupId>
-            <artifactId>weld-se-core</artifactId>
-            <version>6.0.4.Final</version>
+            <artifactId>weld-se-shaded</artifactId>
+            <version>${weld.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-junit5</artifactId>
+            <groupId>org.jboss.weld</groupId>
+            <artifactId>weld-core-impl</artifactId>
+            <version>${weld.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -98,6 +113,16 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>io.opentelemetry</groupId>
+            <artifactId>opentelemetry-sdk-trace</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.opentelemetry</groupId>
+            <artifactId>opentelemetry-sdk-testing</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>org.testcontainers</groupId>
             <artifactId>testcontainers</artifactId>
             <scope>test</scope>
@@ -108,15 +133,28 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.testcontainers</groupId>
-            <artifactId>junit-jupiter</artifactId>
-            <version>1.21.4</version>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>${jackson.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-reload4j</artifactId>
+            <version>2.0.17</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <systemPropertyVariables combine.self="override"/>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>

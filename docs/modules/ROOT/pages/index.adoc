@@ -1,27 +1,456 @@
-= Quarkus Reactive Messaging Pgmq
+= Quarkus Messaging PGMQ
 
 include::./includes/attributes.adoc[]
 
-TIP: Describe what the extension does here.
+A Quarkus extension that provides a https://smallrye.io/smallrye-reactive-messaging[SmallRye Reactive Messaging] connector for https://github.com/pgmq/pgmq[PGMQ] (PostgreSQL Message Queue).
+PGMQ is a lightweight message queue built on top of PostgreSQL, offering durable, transactional messaging without the need for a separate message broker.
 
 == Installation
 
-If you want to use this extension, you need to add the `io.quarkiverse.reactive.messaging.pgmq:quarkus-reactive-messaging-pgmq` extension first to your build file.
-
-For instance, with Maven, add the following dependency to your POM file:
+Add the `quarkus-messaging-pgmq` extension to your project:
 
 [source,xml,subs=attributes+]
 ----
 <dependency>
-    <groupId>io.quarkiverse.reactive.messaging.pgmq</groupId>
-    <artifactId>quarkus-reactive-messaging-pgmq</artifactId>
+    <groupId>io.quarkiverse.messaging.pgmq</groupId>
+    <artifactId>quarkus-messaging-pgmq</artifactId>
     <version>{project-version}</version>
 </dependency>
 ----
 
+== Dev Services
+
+The extension automatically configures Quarkus datasource dev services to use a PostgreSQL image with the PGMQ extension pre-installed.
+In dev and test modes, a container is started with PGMQ enabled -- no manual database setup is required.
+
+To disable this behavior:
+
+[source,properties]
+----
+quarkus.messaging-pgmq.devservices.enabled=false
+----
+
+== Quick Start
+
+=== Sending messages
+
+Inject an `Emitter` to send messages to a PGMQ queue:
+
+[source,java]
+----
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+
+import org.eclipse.microprofile.reactive.messaging.Channel;
+import org.eclipse.microprofile.reactive.messaging.Emitter;
+
+import io.vertx.core.json.JsonObject;
+
+@ApplicationScoped
+public class OrderService {
+
+    @Inject
+    @Channel("orders-out")
+    Emitter<JsonObject> emitter;
+
+    public void placeOrder(String product, int quantity) {
+        emitter.send(JsonObject.of("product", product, "quantity", quantity));
+    }
+}
+----
+
+[source,properties]
+----
+mp.messaging.outgoing.orders-out.connector=quarkus-pgmq
+mp.messaging.outgoing.orders-out.queue=orders
+mp.messaging.outgoing.orders-out.queue.declare=true
+----
+
+=== Receiving messages
+
+Use `@Incoming` to consume messages from a PGMQ queue:
+
+[source,java]
+----
+import jakarta.enterprise.context.ApplicationScoped;
+
+import org.eclipse.microprofile.reactive.messaging.Incoming;
+
+import io.vertx.core.json.JsonObject;
+
+@ApplicationScoped
+public class OrderProcessor {
+
+    @Incoming("orders-in")
+    void process(JsonObject order) {
+        String product = order.getString("product");
+        // process the order
+    }
+}
+----
+
+[source,properties]
+----
+mp.messaging.incoming.orders-in.connector=quarkus-pgmq
+mp.messaging.incoming.orders-in.queue=orders
+----
+
+== Connector Configuration
+
+The connector name is `quarkus-pgmq`.
+
+=== Common attributes (incoming and outgoing)
+
+[cols="3,1,1,4"]
+|===
+|Attribute |Type |Default |Description
+
+|`queue`
+|string
+|_channel name_
+|The queue name. Defaults to the channel name if not set.
+
+|`client-id`
+|string
+|_queue name_
+|The PostgreSQL client identifier. Defaults to queue name, then channel name.
+
+|`tracing-enabled`
+|boolean
+|`true`
+|Whether OpenTelemetry tracing is enabled.
+
+|`queue.declare`
+|boolean
+|`false`
+|Whether to auto-create the queue on startup.
+
+|`queue.declare.type`
+|string
+|`non_partitioned`
+|Queue type: `non_partitioned`, `partitioned`, or `unlogged`.
+
+|`queue.declare.partition-interval`
+|string
+|
+|Partition interval for partitioned queues (e.g. `10000`).
+
+|`queue.declare.retention-interval`
+|string
+|
+|Retention interval for partitioned queues (e.g. `100000`).
+|===
+
+=== Incoming attributes
+
+[cols="3,1,1,4"]
+|===
+|Attribute |Type |Default |Description
+
+|`buffer-size`
+|int
+|`128`
+|The size of the internal buffer for incoming messages.
+
+|`visibility-timeout`
+|int
+|`10`
+|Visibility timeout in seconds passed to the read call.
+
+|`max-poll-messages`
+|int
+|`10`
+|Maximum number of messages to read per poll.
+
+|`max-poll-seconds`
+|int
+|`10`
+|Maximum time to wait for messages in seconds.
+
+|`poll-interval`
+|int
+|`100`
+|Poll interval in milliseconds.
+
+|`ack-type`
+|string
+|`delete`
+|Action on message ack: `delete` or `archive`.
+
+|`failure-type`
+|string
+|`visibility`
+|Action on message nack: `visibility`, `delete`, `archive`, or `ignore`.
+
+|`fifo`
+|boolean
+|`false`
+|Enable FIFO consumption and create a FIFO index on startup.
+
+|`fifo-mode`
+|string
+|`throughput`
+|FIFO read mode: `throughput` (batch from same group first) or `round-robin` (interleave across groups fairly).
+
+|`topic-patterns`
+|string
+|
+|Comma-separated topic patterns to bind on startup (e.g. `orders.*,events.#`).
+
+|`ack-batch`
+|boolean
+|`false`
+|Enable throttled batch ack mode.
+
+|`ack-batch-size`
+|int
+|`500`
+|Max buffered acks before flush.
+
+|`ack-batch-delay`
+|long
+|`5000`
+|Max delay in milliseconds before flushing an incomplete batch.
+|===
+
+=== Outgoing attributes
+
+[cols="3,1,1,4"]
+|===
+|Attribute |Type |Default |Description
+
+|`batch`
+|boolean
+|`false`
+|Whether to enable batch mode for sending messages.
+
+|`batch-size`
+|int
+|`1000`
+|Number of messages per batch when batch mode is enabled.
+
+|`batch-delay`
+|long
+|`1000`
+|Max delay in milliseconds before sending an incomplete batch.
+
+|`routing-key`
+|string
+|
+|When set, uses topic-based routing instead of direct queue send.
+|===
+
+== Advanced Usage
+
+=== Sending with headers
+
+Attach custom headers to outgoing messages using `PGMQOutgoingMetadata`:
+
+[source,java]
+----
+import org.eclipse.microprofile.reactive.messaging.Message;
+import org.eclipse.microprofile.reactive.messaging.Metadata;
+
+import io.quarkiverse.messaging.pgmq.connector.PGMQOutgoingMetadata;
+import io.vertx.core.json.JsonObject;
+
+public void sendWithHeaders(JsonObject payload) {
+    PGMQOutgoingMetadata metadata = PGMQOutgoingMetadata.builder()
+            .withHeaders(JsonObject.of("correlation-id", "abc-123"))
+            .build();
+    emitter.send(Message.of(payload, Metadata.of(metadata)));
+}
+----
+
+=== Sending to a different queue
+
+Override the target queue at runtime using `PGMQOutgoingMetadata`:
+
+[source,java]
+----
+PGMQOutgoingMetadata metadata = PGMQOutgoingMetadata.builder()
+        .withTopic("priority-orders")
+        .build();
+emitter.send(Message.of(payload, Metadata.of(metadata)));
+----
+
+=== Sending with visibility timeout
+
+Use `SendMessage` to set a visibility timeout or delay:
+
+[source,java]
+----
+import io.quarkiverse.messaging.pgmq.client.SendMessage;
+
+@Channel("orders-out")
+Emitter<SendMessage> emitter;
+
+public void sendDelayed(JsonObject payload) {
+    SendMessage<JsonObject> msg = new SendMessage<>();
+    msg.setPayload(payload);
+    msg.setDelay(30); // delay in seconds
+    emitter.send(msg);
+}
+----
+
+=== Using POJOs as message payloads
+
+Instead of `JsonObject`, you can send and receive typed Java objects (POJOs) directly.
+The connector uses Jackson (via `JsonObject.mapFrom()` / `JsonObject.mapTo()`) to serialize and deserialize payloads automatically.
+
+[source,java]
+----
+public class Order {
+
+    public String product;
+    public int quantity;
+
+    public Order() {
+    }
+
+    public Order(String product, int quantity) {
+        this.product = product;
+        this.quantity = quantity;
+    }
+}
+----
+
+Send a POJO:
+
+[source,java]
+----
+@Inject
+@Channel("orders-out")
+Emitter<Order> emitter;
+
+public void placeOrder(String product, int quantity) {
+    emitter.send(new Order(product, quantity));
+}
+----
+
+Receive a POJO:
+
+[source,java]
+----
+@Incoming("orders-in")
+void process(Order order) {
+    // order is deserialized automatically
+}
+----
+
+NOTE: For native builds, the extension automatically discovers POJO types used in `@Incoming` method parameters and `@Channel` `Emitter<T>` fields, and registers them for reflection.
+There is no need to annotate payload classes with `@RegisterForReflection`.
+
+=== Accessing incoming message metadata
+
+Access PGMQ-specific metadata (message ID, enqueued time, read count, headers) from incoming messages:
+
+[source,java]
+----
+import java.util.concurrent.CompletionStage;
+
+import org.eclipse.microprofile.reactive.messaging.Incoming;
+import org.eclipse.microprofile.reactive.messaging.Message;
+
+import io.quarkiverse.messaging.pgmq.connector.PGMQIncomingMetadata;
+import io.vertx.core.json.JsonObject;
+
+@Incoming("orders-in")
+CompletionStage<Void> process(Message<JsonObject> message) {
+    message.getMetadata(PGMQIncomingMetadata.class).ifPresent(meta -> {
+        long msgId = meta.getId();
+        int readCount = meta.getReadCount();
+        JsonObject headers = meta.getHeaders();
+    });
+    return message.ack();
+}
+----
+
+=== Queue types
+
+PGMQ supports three queue types, configured via `queue.declare.type`:
+
+* `non_partitioned` (default) -- Standard queue backed by a single PostgreSQL table.
+* `partitioned` -- Uses `pg_partman` for time-based partitioning. Configure `queue.declare.partition-interval` and `queue.declare.retention-interval`.
+* `unlogged` -- Uses an unlogged table for higher throughput at the cost of durability (data is lost on crash).
+
+=== Acknowledgment and failure strategies
+
+**Ack strategies** (`ack-type`):
+
+* `delete` (default) -- Deletes the message from the queue on ack.
+* `archive` -- Moves the message to the archive table on ack.
+
+**Failure strategies** (`failure-type`):
+
+* `visibility` (default) -- Resets the visibility timeout so the message can be redelivered.
+* `delete` -- Deletes the message on failure.
+* `archive` -- Archives the message on failure.
+* `ignore` -- Does nothing, the message remains in the queue.
+
+=== Batch ack mode
+
+For high-throughput consumers, enable batch ack mode to buffer acknowledgments and flush them periodically:
+
+[source,properties]
+----
+mp.messaging.incoming.orders-in.ack-batch=true
+mp.messaging.incoming.orders-in.ack-batch-size=500
+mp.messaging.incoming.orders-in.ack-batch-delay=5000
+----
+
+=== Batch send mode
+
+For high-throughput producers, enable batch mode to group outgoing messages:
+
+[source,properties]
+----
+mp.messaging.outgoing.orders-out.batch=true
+mp.messaging.outgoing.orders-out.batch-size=1000
+mp.messaging.outgoing.orders-out.batch-delay=1000
+----
+
+=== FIFO queues
+
+Enable FIFO (first-in, first-out) consumption to process messages in order:
+
+[source,properties]
+----
+mp.messaging.incoming.orders-in.fifo=true
+mp.messaging.incoming.orders-in.fifo-mode=throughput
+----
+
+Two FIFO modes are available:
+
+* `throughput` -- Reads messages from the same group first for higher throughput.
+* `round-robin` -- Interleaves messages across groups fairly.
+
+=== Topic-based routing
+
+Bind an incoming channel to topic patterns for pub/sub style messaging:
+
+[source,properties]
+----
+mp.messaging.incoming.events-in.connector=quarkus-pgmq
+mp.messaging.incoming.events-in.queue=my-events
+mp.messaging.incoming.events-in.topic-patterns=orders.*,payments.*
+----
+
+Send to a topic using `routing-key` on the outgoing channel:
+
+[source,properties]
+----
+mp.messaging.outgoing.events-out.connector=quarkus-pgmq
+mp.messaging.outgoing.events-out.queue=my-events
+mp.messaging.outgoing.events-out.routing-key=orders.created
+----
+
+== Health Checks
+
+The connector automatically reports health status through SmallRye Health when `quarkus-smallrye-health` is on the classpath.
+Startup, readiness, and liveness probes reflect the state of all incoming and outgoing channels.
+
 [[extension-configuration-reference]]
 == Extension Configuration Reference
 
-TIP: Remove this section if you don't have Quarkus configuration properties in your extension.
-
-include::includes/quarkus-reactive-messaging-pgmq.adoc[leveloffset=+1, opts=optional]
+include::includes/quarkus-messaging-pgmq.adoc[leveloffset=+1, opts=optional]
