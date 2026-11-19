@@ -9,7 +9,7 @@
     </parent>
     <groupId>io.quarkiverse.messaging.pgmq</groupId>
     <artifactId>quarkus-messaging-pgmq-parent</artifactId>
-    <version>999-SNAPSHOT</version>
+    <version>0.1.0</version>
     <packaging>pom</packaging>
     <name>Quarkus Messaging Pgmq - Parent</name>
 
@@ -24,7 +24,8 @@
         <connection>scm:git:git@github.com:quarkiverse/quarkus-messaging-pgmq.git</connection>
         <developerConnection>scm:git:git@github.com:quarkiverse/quarkus-messaging-pgmq.git</developerConnection>
         <url>https://github.com/quarkiverse/quarkus-messaging-pgmq</url>
-    </scm>
+      <tag>0.1.0</tag>
+  </scm>
 
     <properties>
         <quarkus.version>3.34.1</quarkus.version>
