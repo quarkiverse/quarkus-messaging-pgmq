@@ -28,7 +28,8 @@
   </scm>
 
     <properties>
-        <quarkus.version>3.34.1</quarkus.version>
+        <quarkus.version>3.40.1.2</quarkus.version>
+        <postgresql.version>42.7.5</postgresql.version>
     </properties>
 
     <dependencyManagement>
@@ -39,6 +40,11 @@
                 <version>${quarkus.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.postgresql</groupId>
+                <artifactId>postgresql</artifactId>
+                <version>${postgresql.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
