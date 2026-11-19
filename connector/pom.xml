@@ -149,7 +149,9 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
-                    <systemPropertyVariables combine.self="override" />
+                    <systemPropertyVariables>
+                        <pgmq.image>${pgmq.image}</pgmq.image>
+                    </systemPropertyVariables>
                 </configuration>
             </plugin>
             <plugin>
