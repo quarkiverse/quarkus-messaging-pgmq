@@ -37,8 +37,9 @@ public class PGMQTestBase extends WeldTestBase {
     }
 
     private static PostgreSQLContainer pgmqContainer() {
+        String image = System.getProperty("pgmq.image", "ghcr.io/pgmq/pg18-pgmq:v1.11.0");
         return new PostgreSQLContainer(
-                DockerImageName.parse("ghcr.io/pgmq/pg18-pgmq:v1.11.0").asCompatibleSubstituteFor("postgres"))
+                DockerImageName.parse(image).asCompatibleSubstituteFor("postgres"))
                 .withDatabaseName("testdb")
                 .withUsername("postgres")
                 .withPassword("postgres")
