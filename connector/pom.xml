@@ -10,7 +10,7 @@
     <name>Quarkus Messaging Pgmq - Connector</name>
 
     <properties>
-        <weld.version>6.0.4.Final</weld.version>
+        <weld.version>7.0.0.Final</weld.version>
     </properties>
 
     <dependencies>
