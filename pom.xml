@@ -29,7 +29,7 @@
 
     <properties>
         <quarkus.version>3.40.1.2</quarkus.version>
-        <postgresql.version>42.7.12</postgresql.version>
+        <postgresql.version>42.7.14</postgresql.version>
         <pgmq.image>ghcr.io/pgmq/pg18-pgmq:v1.13.2</pgmq.image>
     </properties>
 
